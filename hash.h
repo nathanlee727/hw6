@@ -19,34 +19,28 @@ struct MyStringHash {
         }
     }
     // hash function entry point (i.e. this is h(k))
-HASH_INDEX_T operator()(const std::string& k) const
-    {
-        unsigned long long w[5] = {0}; 
+    HASH_INDEX_T operator()(const std::string& k) const {
+        unsigned long long w[5] = {0};
         int len = k.length();
-        int numBlocks = (len + 5) / 6;  
-        
-        for (int i = 0; i < numBlocks; ++i) {
-            int blockStart = len - 6 * (i + 1);  
-            blockStart = blockStart < 0 ? 0 : blockStart;
-            int blockEnd = len - 6 * i; 
-            unsigned long long blockValue = 0;
-            unsigned long long pow36 = 1;  
-
-            for (int j = blockEnd - 1; j >= blockStart; --j) {
-                char c = std::tolower(k[j]);
-                int value = letterDigitToNumber(c);
-                blockValue += value * pow36;
-                pow36 *= 36;
+        int blockIndex = 4; 
+        for (int i = len - 1; i >= 0; i -= 6) {
+            unsigned long long value = 0;
+            int start = std::max(i - 5, 0);
+            
+            for (int j = start; j <= i; ++j) {
+                value = value * 36 + letterDigitToNumber(std::tolower(k[j]));
             }
-            w[5 - numBlocks + i] = blockValue;
+            w[blockIndex--] = value;
         }
 
-        unsigned long long hashValue = 0;
+        unsigned long long hash = 0;
         for (int i = 0; i < 5; ++i) {
-            hashValue += rValues[i] * w[i];
+            hash += rValues[i] * w[i];
         }
-        return hashValue;
+
+        return hash;
     }
+
 
     // A likely helper function is to convert a-z,0-9 to an integral value 0-35
     HASH_INDEX_T letterDigitToNumber(char letter) const
